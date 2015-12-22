@@ -1,32 +1,12 @@
-import sys
+import sys, parser
 sys.path.append('../../Downloads/simplenlg-v442/simplenlg-v4.4.2.jar')
 import simplenlg
 
-def listparser(parse, index):
-	returnlist = list()
-	rootindex = index
-	lastindex = index
-	while index < len(parse):
-		if parse[index] == '(':
-			sublist, index, subrootindex = listparser(parse, index + 1)
-			returnlist.append(sublist)
-			lastindex = index
-		elif parse[index] == ')':
-			if lastindex != index:
-				returnlist.append(parse[lastindex: index])
-			return returnlist, index + 1, rootindex
-		elif parse[index] == ' ':
-			if lastindex != index:
-				returnlist.append(parse[lastindex: index])
-			index += 1
-			lastindex = index
-		else:
-			index += 1
-	return returnlist, index, rootindex
-
-lexicon = simplenlg.lexicon.Lexicon.getDefaultLexicon()
-factory = simplenlg.framework.NLGFactory(lexicon)
-realiser = simplenlg.realiser.english.Realiser(lexicon)
+def initialize():
+	global lexicon, factory, realiser
+	lexicon = simplenlg.lexicon.Lexicon.getDefaultLexicon()
+	factory = simplenlg.framework.NLGFactory(lexicon)
+	realiser = simplenlg.realiser.english.Realiser(lexicon)
 
 def Whandler(word, category = None, plural = None, tense = None):
 	global factory
