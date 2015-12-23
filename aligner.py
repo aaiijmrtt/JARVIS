@@ -23,8 +23,8 @@ class ILPAligner:
 		targetparse = self.parser.parse(targetline)
 		lex = [[self.similarity(target, source) for target in targets] for source in sources]
 		syn = [[[[0.0 for i in range(len(targets))] for j in range(len(sources))] for k in range(len(targets))] for l in range(len(sources))]
-		synsource = self.parser.nestedlist(sourceparse, len(sources))
-		syntarget = self.parser.nestedlist(targetparse, len(targets))
+		synsource = self.parser.graph(sourceparse)
+		syntarget = self.parser.graph(targetparse)
 
 		problem = pulp.LpProblem('ALIGNMENT', pulp.LpMaximize)
 		x = [[pulp.LpVariable(str(j) + ':' + str(i), 0, 1, pulp.LpInteger) for i in range(len(targets))] for j in range(len(sources))]
@@ -40,7 +40,7 @@ class ILPAligner:
 						problem += y[i][j][k][l] <= x[i][j]
 						problem += y[i][j][k][l] <= x[k][l]
 						problem += y[i][j][k][l] >= x[i][j] + x[k][l] - 1
-						syn[i][j][k][l] = 1.0 if synsource[i][k] and syntarget[j][l] and synsource[i][k] == syntarget[j][l] else 0.0
+						syn[i][j][k][l] = 1.0 if synsource.has_edge(i + 1, k + 1) and syntarget.has_edge(j + 1, l + 1) and synsource[i + 1][k + 1]['relation'] == syntarget[j + 1][l + 1]['relation'] else 0.0
 
 		problem += pulp.lpSum([lex[i][j] * x[i][j] for j in range(len(targets)) for i in range(len(sources))] + [syn[i][j][k][l] * y[i][j][k][l] for l in range(len(targets)) for k in range(len(sources)) for j in range(len(targets)) for i in range(len(sources))])
 		problem.solve()

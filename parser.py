@@ -78,18 +78,6 @@ class DependencyParser:
 			print '[DEBUG: DEPENDENCY PARSER OUTPUT', returnparse, ']'
 		return returnparse
 
-	def nestedlist(self, parse, length = None):
-		if length is None:
-			length = len(parse)
-		returnlist = [[None for i in range(length)] for j in range(length)]
-		for line in parse:
-			match = self.pattern.match(line)
-			if match:
-				returnlist[int(match.group(3)) - 1][int(match.group(5)) - 1] = match.group(1)
-		if self.debug:
-			print '[DEBUG: LISTING DEPENDENCIES', returnlist, ']'
-		return returnlist
-
 	def graph(self, parse):
 		import networkx
 		returngraph = networkx.DiGraph()
