@@ -1,105 +1,98 @@
-import subprocess, re
+import re
+import networkx, matplotlib.pyplot, jpype
+from networkx.readwrite import json_graph
+import configurer, logger, pyper
 
-class ConstituencyParser:
-	def __init__(self, debug):
-		self.debug = debug
-		self.online = False
+def initialize():
+	global online, parser
+	if online:
+		logger.logger.warn('PARSER REINITIALIZATION')
+		return
+	parser = jpype.JClass('Parser')()
+	parser.initialize()
+	online = True
+	logger.logger.info('PARSER INITIALIZATION')
 
-	def initialize(self):
-		if not self.online:
-			self.parser = subprocess.Popen('java -mx150m -classpath "../../Downloads/stanford-parser-full-2015-04-20/*" edu.stanford.nlp.parser.lexparser.LexicalizedParser -sentences newline -outputFormat "oneline" edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz -', stdin = subprocess.PIPE, stdout = subprocess.PIPE, shell = True)
-		self.online = True
-		if self.debug:
-			print '[DEBUG: INITIALIZED CONSTITUENCY PARSER]'
+def constituencyparse(line):
+	global online, parser
+	if not online:
+		logger.logger.warn('UNINITIALIZED CONSTITUENCY PARSER INPUT <' + line.strip() + '>')
+		return
+	logger.logger.info('CONSTITUENCY PARSER INPUT <' + line.strip() + '>')
+	returnparse = str(parser.constituencyParse(line).toString())
+	logger.logger.info('CONSTITUENCY PARSER OUTPUT <' + returnparse + '>')
+	return returnparse
 
-	def parse(self, line):
-		self.parser.stdin.write(line)
-		readline = self.parser.stdout.readline()
-		if self.debug:
-			print '[DEBUG: CONSTITUENCY PARSER INPUT', line.strip(), ']'
-			print '[DEBUG: CONSTITUENCY PARSER OUTPUT', readline.strip(), ']'
-		return readline
+def dependencyparse(line):
+	global online, parser
+	if not online:
+		logger.logger.warn('UNINITIALIZED DEPENDENCY PARSER INPUT <' + line.strip() + '>')
+		return
+	logger.logger.debug('DEPENDENCY PARSER INPUT <' + line.strip() + '>')
+	parse = parser.dependencyParse(line)
+	returnparse = list()
+	for dependency in parse:
+		returnparse.append((str(dependency.reln().toString()), str(dependency.gov().toString()), int(dependency.gov().index()), str(dependency.dep().toString()), int(dependency.dep().index())))
+	logger.logger.info('DEPENDENCY PARSER OUTPUT <' + str(returnparse) + '>')
+	return returnparse
 
-	def nestedlist(self, parse, index = 0):
-		returnlist = list()
-		rootindex = index
-		lastindex = index
-		while index < len(parse):
-			if parse[index] == '(':
-				sublist, index, subrootindex = self.nestedlist(parse, index + 1)
-				returnlist.append(sublist)
-				lastindex = index
-			elif parse[index] == ')':
-				if lastindex != index:
-					returnlist.append(parse[lastindex: index])
-				if self.debug and rootindex == 0:
-					print '[DEBUG: LISTING CONSTITUENCIES', returnlist, ']'
-				return returnlist, index + 1, rootindex
-			elif parse[index] == ' ':
-				if lastindex != index:
-					returnlist.append(parse[lastindex: index])
-				index += 1
-				lastindex = index
-			else:
-				index += 1
-		if self.debug and rootindex == 0:
-			print '[DEBUG: LISTING CONSTITUENCIES', returnlist, ']'
-		return returnlist, index, rootindex
+def graph(dependencyparse):
+	logger.logger.debug('GRAPH INPUT <' + str(dependencyparse) + '>')
+	returngraph = networkx.DiGraph()
+	for dependency in dependencyparse:
+		returngraph.add_node(int(dependency[2]), token = dependency[1])
+		returngraph.add_node(int(dependency[4]), token = dependency[3])
+		returngraph.add_edge(int(dependency[2]), int(dependency[4]), relation = dependency[0])
+	logger.logger.info('GRAPH OUTPUT <' + str(json_graph.node_link_data(returngraph)) + '>')
+	return returngraph
 
-	def terminate(self):
-		if self.online:
-			self.parser.terminate()
-		self.online = False
-		if self.debug:
-			print '[DEBUG: TERMINATED CONSTITUENCY PARSER]'
+def plot(graph):
+	logger.logger.debug('PLOT INPUT <' + str(json_graph.node_link_data(graph)) + '>')
+	positions = networkx.spring_layout(graph)
+	networkx.draw(graph, positions, labels = networkx.get_node_attributes(graph, 'token'))
+	networkx.draw_networkx_edge_labels(graph, positions, labels = networkx.get_edge_attributes(graph,'relation'))
+	matplotlib.pyplot.show()
 
-class DependencyParser:
-	def __init__(self, debug):
-		self.debug = debug
-		self.pattern = re.compile('^([a-z:]*)\(([a-zA-Z]*)-([0-9]*), ([a-zA-Z]*)-([0-9]*)\)\n$')
-		self.online = False
+def nestedlist(constituencyparse, index = 0):
+	if index == 0:
+		logger.logger.debug('NESTEDLIST INPUT <' + constituencyparse + '>')
+	returnlist = list()
+	rootindex = index
+	lastindex = index
+	while index < len(constituencyparse):
+		if constituencyparse[index] == '(':
+			sublist, index, subrootindex = nestedlist(constituencyparse, index + 1)
+			returnlist.append(sublist)
+			lastindex = index
+		elif constituencyparse[index] == ')':
+			if lastindex != index:
+				returnlist.append(constituencyparse[lastindex: index])
+			if rootindex == 0:
+				logger.logger.info('NESTEDLIST OUTPUT <' + str(returnlist) + '>')
+			return returnlist, index + 1, rootindex
+		elif constituencyparse[index] == ' ':
+			if lastindex != index:
+				returnlist.append(constituencyparse[lastindex: index])
+			index += 1
+			lastindex = index
+		else:
+			index += 1
+	if rootindex == 0:
+		logger.logger.info('NESTEDLIST OUTPUT <' + str(returnlist) + '>')
+	return returnlist, index, rootindex
 
-	def initialize(self):
-		if not self.online:
-			self.parser = subprocess.Popen('java -mx150m -classpath "../../Downloads/stanford-parser-full-2015-04-20/*" edu.stanford.nlp.parser.lexparser.LexicalizedParser -sentences newline -outputFormat "typedDependencies" edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz -', stdin = subprocess.PIPE, stdout = subprocess.PIPE, shell = True)
-		self.online = True
-		if self.debug:
-			print '[DEBUG: INITIALIZED DEPENDENCY PARSER]'
+def terminate():
+	global online, parser
+	if not online:
+		logger.logger.warn('UNINITIALIZED PARSER TERMINATION')
+		return
+	parser.terminate()
+	online = False
+	logger.logger.info('PARSER TERMINATION')
 
-	def parse(self, line):
-		self.parser.stdin.write(line)
-		returnparse = list()
-		readline = self.parser.stdout.readline()
-		while readline != '\n':
-			returnparse.append(readline)
-			readline = self.parser.stdout.readline()
-		if self.debug:
-			print '[DEBUG: DEPENDENCY PARSER INPUT', line.strip(), ']'
-			print '[DEBUG: DEPENDENCY PARSER OUTPUT', returnparse, ']'
-		return returnparse
-
-	def graph(self, parse):
-		import networkx
-		returngraph = networkx.DiGraph()
-		for line in parse:
-			match = self.pattern.match(line)
-			if match:
-				returngraph.add_node(int(match.group(3)), token = match.group(2))
-				returngraph.add_node(int(match.group(5)), token = match.group(4))
-				returngraph.add_edge(int(match.group(3)), int(match.group(5)), relation = match.group(1))
-		if self.debug:
-			import matplotlib.pyplot
-			print '[DEBUG: GRAPHING DEPENDENCIES]'
-			labeling = dict()
-			for node in returngraph.nodes(True):
-				labeling[node[0]] = node[1]['token']
-			networkx.draw_networkx(returngraph, labels = labeling)
-			matplotlib.pyplot.show()
-		return returngraph
-
-	def terminate(self):
-		if self.online:
-			self.parser.terminate()
-		self.online = False
-		if self.debug:
-			print '[DEBUG: TERMINATED DEPENDENCY PARSER]'
+pyper.addclasspath(configurer.stanfordparser)
+pyper.addclasspath(configurer.stanfordmodels)
+pyper.addclasspath(configurer.stanfordwrapper)
+online = False
+parser = None
+logger.logger.info('PARSER CREATION')
