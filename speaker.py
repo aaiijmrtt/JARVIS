@@ -1,20 +1,33 @@
-import subprocess
+import time, subprocess
+import configurer, logger
 
-class Speaker:
-	def __init__(self, debug):
-		self.debug = debug
+def initialize():
+	global online, process
+	if online:
+		logger.logger.warn('SPEAKER REINITIALIZATION')
+		return
+	process = subprocess.Popen(configurer.espeak, stdin = subprocess.PIPE, stdout = subprocess.PIPE, shell = True)
+	online = True
+	logger.logger.info('SPEAKER INITIALIZATION')
 
-	def initialize(self):
-		self.engine = subprocess.Popen('../../Downloads/espeak-1.48.04-source/linux_32bit/espeak -s 130 -p 50 -k 1', stdin = subprocess.PIPE, shell = True)
-		if self.debug:
-			print '[DEBUG: INITIALIZED SPEAKER]'
+def speak(line):
+	global online, process
+	if not online:
+		logger.logger.warn('UNINITIALIZED SPEAKER INPUT <' + line.strip() + '>')
+		return
+	logger.logger.info('SPEAKER INPUT <' + line.strip() + '>')
+	process.stdin.write(line)
+	time.sleep(0.1)
 
-	def speak(self, line):
-		if self.debug:
-			print '[DEBUG: SPEAKER INPUT', line.strip(), ']'
-		self.engine.stdin.write(line)
+def terminate():
+	global online, process
+	if not online:
+		logger.logger.warn('UNINITIALIZED SPEAKER TERMINATION')
+		return
+	process.terminate()
+	online = False
+	logger.logger.info('SPEAKER TERMINATION')
 
-	def terminate(self):
-		self.engine.terminate()
-		if self.debug:
-			print '[DEBUG: TERMINATED SPEAKER]'
+online = False
+process = None
+logger.logger.info('SPEAKER CREATION')
