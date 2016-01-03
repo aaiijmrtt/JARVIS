@@ -37,7 +37,7 @@ public class Parser {
 		List<? extends HasWord> sentence = tokenizer.tokenize();
 		Tree parse = parser.apply(sentence);
 		GrammaticalStructure grammaticalstructure = grammaticalstructurefactory.newGrammaticalStructure(parse);
-		Collection dependencies = grammaticalstructure.typedDependenciesCCprocessed();
+		Collection dependencies = grammaticalstructure.typedDependenciesCollapsedTree();
 		return dependencies;
 	}
 
