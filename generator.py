@@ -4,7 +4,7 @@ import configurer, logger, pyper
 def initialize():
 	global online, package, words, phrases, clauses, lexicon, factory, realiser
 	if online:
-		logger.logger.warn('GENERATOR REINITIALIZATION')
+		logger.logger.warn('REINITIALIZATION')
 		return
 	package = jpype.JPackage('simplenlg')
 	words = {
@@ -50,7 +50,7 @@ def initialize():
 	factory = package.framework.NLGFactory(lexicon)
 	realiser = package.realiser.english.Realiser(lexicon)
 	online = True
-	logger.logger.info('GENERATOR INITIALIZATION')
+	logger.logger.info('INITIALIZATION')
 
 def Wgenerator(word, category, plural, tense):
 	global online, factory
@@ -63,7 +63,7 @@ def Wgenerator(word, category, plural, tense):
 		word.setPlural(plural)
 	if tense is not None:
 		word.setTense(tense)
-	logger.logger.debug('GENERATOR(W) OUTPUT <' + str(word.toString()) + '>')
+	logger.logger.log(logger.details, 'OUTPUT <' + str(word.toString()) + '>')
 	return word
 
 def NPgenerator(sublist):
@@ -91,7 +91,7 @@ def NPgenerator(sublist):
 					generation.addModifier(subsentence)
 			else:
 				generation.addModifier(subsentence)
-	logger.logger.debug('GENERATOR(NP) OUTPUT <' + str(generation.toString()) + '>')
+	logger.logger.log(logger.details, 'OUTPUT <' + str(generation.toString()) + '>')
 	return generation
 
 def VPgenerator(sublist):
@@ -128,7 +128,7 @@ def VPgenerator(sublist):
 					Fobject = False
 				else:
 					generation.addModifier(subsentence)
-	logger.logger.debug('GENERATOR(VP) OUTPUT <' + str(generation.toString()) + '>')
+	logger.logger.log(logger.details, 'OUTPUT <' + str(generation.toString()) + '>')
 	return generation
 
 def Sgenerator(sublist):
@@ -154,7 +154,7 @@ def Sgenerator(sublist):
 					generation.addModifier(subsentence)
 			else:
 				generation.addModifier(subsentence)
-	logger.logger.debug('GENERATOR(S) OUTPUT <' + str(generation.toString()) + '>')
+	logger.logger.log(logger.details, 'OUTPUT <' + str(generation.toString()) + '>')
 	return generation
 
 def generator(parsedlist):
@@ -179,21 +179,22 @@ def generator(parsedlist):
 def generate(parsedlist):
 	global online, realiser
 	if not online:
-		logger.logger.warn('UNINITIALIZED GENERATOR INPUT <' + str(parsedlist) + '>')
+		logger.logger.warn('UNINITIALIZED')
+		logger.logger.warn('INPUT <' + str(parsedlist) + '>')
 		return
-	logger.logger.debug('GENERATOR INPUT <' + str(parsedlist) + '>')
+	logger.logger.debug('INPUT <' + str(parsedlist) + '>')
 	generation = generator(parsedlist)
 	realisation = str(realiser.realise(generation))
-	logger.logger.info('GENERATOR OUTPUT <' + realisation + '>')
+	logger.logger.info('OUTPUT <' + realisation + '>')
 	return realisation
 
 def terminate():
 	global online
 	if not online:
-		logger.logger.warn('UNINITIALIZED GENERATOR TERMINATION')
+		logger.logger.warn('UNINITIALIZED')
 		return
 	online = False
-	logger.logger.info('GENERATOR TERMINATION')
+	logger.logger.info('TERMINATION')
 
 pyper.addclasspath(configurer.simplenlg)
 online = False
@@ -203,4 +204,4 @@ clauses = None
 lexicon = None
 factory = None
 realiser = None
-logger.logger.info('GENERATOR CREATION')
+logger.logger.info('CREATION')

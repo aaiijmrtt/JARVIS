@@ -36,4 +36,4 @@ logging.config.dictConfig({
 })
 
 logger = logging.getLogger('logger')
-logger.info('LOGGER CREATION')
+logger.info('CREATION')

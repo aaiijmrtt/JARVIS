@@ -3,26 +3,27 @@ import configurer, logger
 
 def addclasspath(classpath):
 	global classpathlist
+	logger.logger.debug('INPUT <' + classpath + '>')
 	classpathlist.append(classpath)
-	logger.logger.debug('PYPER CLASSPATH ADDITION <' + classpath + '>')
 
 def initialize():
 	global online
 	if online:
-		logger.logger.warn('PYPER REINITIALIZATION')
+		logger.logger.warn('REINITIALIZATION')
+		return
 	jpype.startJVM(configurer.libjvm, '-Djava.class.path=%s' %(':'.join(classpathlist)))
 	online = True
-	logger.logger.info('PYPER INITIALIZATION')
+	logger.logger.info('INITIALIZATION')
 
 def terminate():
-	global online, logger
+	global online
 	if not online:
-		logger.logger.warn('UNINITIALIZED PYPER TERMINATION')
+		logger.logger.warn('UNINITIALIZED')
 		return
 	jpype.shutdownJVM()
 	online = False
-	logger.logger.info('PYPER TERMINATION')
+	logger.logger.info('TERMINATION')
 
 classpathlist = ['*']
 online = False
-logger.logger.info('PYPER CREATION')
+logger.logger.info('CREATION')
