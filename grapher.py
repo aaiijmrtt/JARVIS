@@ -94,14 +94,14 @@ def expandactivenode():
 		logger.logger.warn('INACTIVE')
 		return
 	newframes = set()
-	toframes = querier.smartquery('getrelatedframesbyfromID', active)
+	toframes = querier.smartquery('getrelatedframesbyfromID', [active])
 	for toframe in toframes:
 		toframeID = querier.smartquery('getframebyname', (toframe[1], ))
 		if toframeID[0][0] not in graph.nodes():
 			graph.add_node(int(toframeID[0][0]), name = toframeID[0][1], subgraph = networkx.DiGraph())
 			newframes.add(int(toframeID[0][0]))
 		graph.add_edge(active, int(toframeID[0][0]), relation = toframe[2])
-	fromframes = querier.smartquery('getrelatedframesbytoID', active)
+	fromframes = querier.smartquery('getrelatedframesbytoID', [active])
 	for fromframe in fromframes:
 		fromframename = querier.smartquery('getframebyID', (fromframe[0], ))
 		if fromframename[0][0] not in graph.nodes():

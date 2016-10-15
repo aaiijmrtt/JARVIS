@@ -33,7 +33,7 @@ This is not a toy.
 * Requires SimplgNLG
 * Requires Espeak
 
-**MySQL Configuration**
+**MySQL Configuration**:
 
 * Host Name: localhost
 * User Name: root
@@ -52,14 +52,15 @@ This is not a toy.
 	|   |   |   +-- *.xml
 	|   |   +-- lu
 	|   |       +-- *.xml
-	|   +-- jdk1.8.0_66
+	|   +-- jdk1.8.0_92
 	|   |   +-- jre
 	|   |       +-- lib
-	|   |           +-- i386
+	|   |           +-- amd64
 	|   |               +-- server
 	|   |                   +-- libjvm.so
-	|   +-- simplenlg-v442
-	|   |   +-- simplenlg-v4.4.2.jar
+	|   +-- simplenlg-v4.4.8
+	|   |   +-- simplenlg-v4.4.8
+	|   |   |   +-- SimpleNLG-4.4.8.jar
 	|   +-- sphinx4-5prealpha-src
 	|   |   +-- sphinx4-core
 	|   |   |   +-- target
@@ -67,9 +68,9 @@ This is not a toy.
 	|   |   +-- sphinx4-data
 	|   |       +-- target
 	|   |           +-- sphinx4-data-1.0-SNAPSHOT.jar
-	|   +-- stanford-parser-full-2015-04-20
+	|   +-- stanford-parser-full-2015-12-09
 	|       +-- stanford-parser.jar
-	|       +-- stanford-parser-3.5.2-models.jar
+	|       +-- stanford-parser-3.6.0-models.jar
 	+-- Sources
 		+-- Jarvis
 		    +-- aligner.py
@@ -86,5 +87,10 @@ This is not a toy.
 		    +-- pyper.py
 		    +-- querier.py
 		    +-- speaker.py
+		    +-- tester.py
 		    +-- Parser.java
 		    +-- parser.jar
+
+**Exploring the Code**:
+
+You might want to take a look at `tester.py` once you have installed all the dependencies / positioned them according to the outlined directory structure. If you change the directory structure, you must suitably modify the paths in `configurer.py`. Pick and run the test for a module to get an idea of how it works. Please run `testExtractor()` first, as this initializes the database. Make sure MySQL server is running, and the timeout is set to an obscenely large period. Don't bother letting `testModeler()` complete.

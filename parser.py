@@ -75,6 +75,7 @@ def terminate():
 pyper.addclasspath(configurer.stanfordparser)
 pyper.addclasspath(configurer.stanfordmodels)
 pyper.addclasspath(configurer.stanfordwrapper)
+pyper.addclasspath(configurer.stanforddependencies)
 online = False
 parser = None
 logger.logger.info('CREATION')
